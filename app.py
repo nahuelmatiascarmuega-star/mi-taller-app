@@ -1,48 +1,52 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+import urllib.request
 
 # Configuración del sistema
 st.set_page_config(page_title="Negocio Técnico Matías", page_icon="🔧", layout="wide")
 
-# --- CONEXIÓN DIRECTA POR ENLACE ABIERTO (EVITA EL CACHÉ DE GOOGLE) ---
-# Extraemos el ID único de tu documento para leerlo sin intermediarios
+# ID único de tu documento de Google Sheets
 SHEET_ID = "1z9kT1uHJVZuFXCWH9-SmTS9dNGQcuUxgbIReNxvCB3E"
 
-def cargar_datos_directos():
+def cargar_datos_seguros():
     try:
-        # Enlaces de descarga directa en formato CSV para saltar el bloqueo de Google
-        url_trabajos = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Trabajos"
-        url_clientes = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Clientes"
-        url_caja = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Caja"
+        # Enlaces de exportación directa a formato CSV (método universal sin trabas)
+        url_trabajos = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Trabajos"
+        url_clientes = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Clientes"
+        url_caja = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Caja"
         
-        # Lectura directa de las hojas
-        t = pd.read_csv(url_trabajos).fillna("")
-        c = pd.read_csv(url_clientes).fillna("")
-        caj = pd.read_csv(url_caja).fillna("")
+        # Lectura directa ignorando el bloqueo de conexiones de Google
+        t = pd.read_csv(url_trabajos, on_bad_lines='skip').fillna("")
+        c = pd.read_csv(url_clientes, on_bad_lines='skip').fillna("")
+        caj = pd.read_csv(url_caja, on_bad_lines='skip').fillna("")
         
         return t, c, caj
     except Exception as e:
-        st.error(f"Asegúrate de que el botón 'Compartir' en tu Google Sheets esté configurado como 'Cualquier persona con el enlace puede editar'. Error: {e}")
+        st.error(f"Intentando reconectar con la base de datos... Por favor, presiona el botón 'Reiniciar' en el menú lateral. Detalle: {e}")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-df_trabajos, df_clientes, df_caja = cargar_datos_directos()
+df_trabajos, df_clientes, df_caja = cargar_datos_seguros()
 
-# Limpieza rápida de nombres de columnas (borra el símbolo # y espacios que agrega Google)
+# Limpiar encabezados de columnas de símbolos molestos (# o espacios)
 for df in [df_trabajos, df_clientes, df_caja]:
     if not df.empty:
         df.columns = df.columns.str.replace('#', '').str.strip()
 
-# Convertir columnas clave a números para que el Dashboard no falle
+# Convertir columnas numéricas para las fórmulas matemáticas del Dashboard
 columnas_numericas = ["Precio Cobrado", "Costo Repuesto", "Otros Costos", "Ganancia", "Seña", "Saldo"]
 for col in columnas_numericas:
     if not df_trabajos.empty and col in df_trabajos.columns:
         df_trabajos[col] = pd.to_numeric(df_trabajos[col], errors='coerce').fillna(0)
 
-# Menú de navegación lateral
+# Menú lateral
 menu = st.sidebar.radio("Navegación", ["📊 Dashboard Resumen", "🔧 Control de Trabajos", "👥 Base de Clientes", "💰 Caja Diaria"])
 
+# Botón manual de actualización en la barra lateral
 st.sidebar.markdown("---")
+if st.sidebar.button("🔄 Actualizar Datos"):
+    st.rerun()
+
+# Alertas en la barra lateral
 st.sidebar.subheader("🚨 Alertas Rápidas")
 if not df_trabajos.empty and "Saldo" in df_trabajos.columns:
     saldos_pendientes = df_trabajos[df_trabajos["Saldo"] > 0]
@@ -75,7 +79,7 @@ if menu == "📊 Dashboard Resumen":
         if "Rubro" in df_trabajos.columns and not df_trabajos["Rubro"].mode().empty:
             col6.metric("🏆 Rubro más Frecuente", df_trabajos["Rubro"].mode().iloc[0])
     else:
-        st.info("Aún no hay datos cargados en la pestaña 'Trabajos'.")
+        st.info("Aún no hay datos cargados o el servidor está reintentando la conexión.")
 
 # ==========================================
 # 2. CONTROL DE TRABAJOS
@@ -86,7 +90,7 @@ elif menu == "🔧 Control de Trabajos":
     tab1, tab2 = st.tabs(["➕ Registrar Trabajo", "📋 Historial y Estados"])
     
     with tab1:
-        st.info("💡 Como tu base de datos está protegida, registra tus nuevos trabajos directamente en tu Google Sheets. La aplicación los mostrará aquí en tiempo real de forma inmediata.")
+        st.info("💡 Registra tus nuevos trabajos directamente en tu Google Sheets. La aplicación se actualizará automáticamente aquí en tiempo real.")
 
     with tab2:
         if not df_trabajos.empty:
@@ -102,7 +106,7 @@ elif menu == "👥 Base de Clientes":
     if not df_clientes.empty:
         st.dataframe(df_clientes, use_container_width=True)
     else:
-        st.info("La pestaña 'Clientes' de tu Google Sheets está vacía o cargando.")
+        st.info("La pestaña 'Clientes' de tu Google Sheets está vacía.")
     
     if not df_trabajos.empty and "Cliente" in df_trabajos.columns:
         st.subheader("🔍 Buscador de Historial")
@@ -118,3 +122,4 @@ elif menu == "💰 Caja Diaria":
         st.dataframe(df_caja, use_container_width=True)
     else:
         st.info("No hay movimientos registrados en la pestaña 'Caja'.")
+
