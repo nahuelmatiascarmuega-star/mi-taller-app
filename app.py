@@ -7,7 +7,7 @@ from streamlit_gsheets import GSheetsConnection
 st.set_page_config(page_title="Negocio Técnico Matías", page_icon="🔧", layout="wide")
 
 # Enlace de tu hoja de cálculo
-URL_DE_TU_HOJA = "https://google.com"
+URL_DE_TU_HOJA = "https://docs.google.com/spreadsheets/d/1z9kT1uHJVZuFXCWH9-SmTS9dNGQcuUxgbIReNxvCB3E/edit?usp=sharing"
 
 @st.cache_data(ttl=0)
 def cargar_datos_taller():
