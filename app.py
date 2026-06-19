@@ -8,12 +8,13 @@ st.set_page_config(page_title="Negocio Técnico Matías", page_icon="🔧", layo
 # ID único de tu documento de Google Sheets
 SHEET_ID = "1z9kT1uHJVZuFXCWH9-SmTS9dNGQcuUxgbIReNxvCB3E"
 
+# PEGÁ ESTE NUEVO BLOQUE EN SU LUGAR:
 def cargar_datos_seguros():
     try:
-        # Enlaces de exportación directa a formato CSV (método universal sin trabas)
-        url_trabajos = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Trabajos"
-        url_clientes = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Clientes"
-        url_caja = f"https://google.com{SHEET_ID}/export?format=csv&sheet=Caja"
+        # Enlaces de exportación directa a formato CSV corregidos
+        url_trabajos = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Trabajos"
+        url_clientes = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Clientes"
+        url_caja = f"https://google.com{SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Caja"
         
         # Lectura directa ignorando el bloqueo de conexiones de Google
         t = pd.read_csv(url_trabajos, on_bad_lines='skip').fillna("")
