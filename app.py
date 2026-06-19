@@ -1,7 +1,7 @@
 ﻿import streamlit as st  
 import pandas as pd  
 from datetime import datetime  
-from streamlit\_gsheets import GSheetsConnection
+from streamlit_gsheets import GSheetsConnection
 
 ### Configuración profesional del sistema
 
